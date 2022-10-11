@@ -1,10 +1,9 @@
 //---------------------------------------------------------
-// Demo           : taxi
-// Fichier        : taxi.cpp
+// Fichier        : Labo_03_K.cpp
 // Classe         : PRG1_E
 // Auteur(s)      : ValentinRicard, MussieSirak
 // But            : Création d'une application de calcul de prix de Taxi
-// Modifications  :
+// Modifications  : Changement du prix du supplément bagage de 2.50 à 2.60
 // Remarque(s)    : NILL
 //---------------------------------------------------------
 
@@ -18,7 +17,7 @@ using namespace std; // Permet d'éviter de mettre std:: partout
 
 // Initialise les constantes (définies dans les données)
 const float BASE_PRICE = 5.00f;
-const float PER_LUGGAGE_TAX = 2.50f;
+const float PER_LUGGAGE_TAX = 2.60f;
 const float PER_MINUTE_PRICE = 1.20f;
 
 int main() {
