@@ -2,9 +2,14 @@
 // Fichier        : Labo_03_K.cpp
 // Classe         : PRG1_E
 // Auteur(s)      : ValentinRicard, MussieSirak
+//                  Cedric Gerber, Alexandre Philibert
 // But            : Création d'une application de calcul de prix de Taxi
 // Modifications  : Changement du prix du supplément bagage de 2.50 à 2.60
+//                  Ajout de directives define pour supprimer les lignes dupliquées
+//                  Ajout de tarifs de jour et de nuit
 // Remarque(s)    : NILL
+// Compilateur    : g++ 11.2.0
+// Standard C++   : c++ 20
 //---------------------------------------------------------
 
 #include <iostream>  // cout & cin
@@ -14,6 +19,9 @@
 #include <iomanip>   // setw(...) et setprecision(...)
 
 using namespace std; // Permet d'éviter de mettre std:: partout
+
+#define AFFICHER_MESSAGE_FIN cout << "presser ENTREE pour quitter" << endl
+#define VIDER_BUFFER cin.ignore(numeric_limits<streamsize>::max(), '\n')
 
 // Initialise les constantes (définies dans les données)
 const float BASE_PRICE = 5.00f,
@@ -43,7 +51,6 @@ int main() {
         << " - supp par bagag   : " << PER_LUGGAGE_TAX << endl
         << " - tarif/min (jour) : " << TARIF_JOUR      << endl
         << " - tarif/min (nuit) : " << TARIF_NUIT      << endl
-        // TODO: Mettre tarif jour en constante
         << " - tarif jour       : " << "08h00 - 20h00" << endl;
 
 
@@ -51,59 +58,102 @@ int main() {
    cout << "votre commande" << endl
         << "==============" << endl;
    // Un entier est choisi, il n'est pas possible d'avoir 2.4 bagages.
-   int luggageCount;
+   int nombreBagages;
    cout << "- nbre de baggage [" << NOMBRE_BAGAGE_MIN << " - " << NOMBRE_BAGAGE_MAX << "] :" ;
-   cin >> luggageCount;
-   cin.ignore(numeric_limits<streamsize>::max(), '\n');
+   cin >> nombreBagages;
+   VIDER_BUFFER;
 
-   // Nous n'avons pas forcément besoin de plus de 6 chiffres significatifs dans les entrées
-   float travelDistance;
+   if (nombreBagages < NOMBRE_BAGAGE_MIN || nombreBagages > NOMBRE_BAGAGE_MAX) {
+      //TODO: Utiliser cerr ? L'ordre dans lequel les buffers s'affichent n'est pas garanti
+      cout << "Le nombre de bagages doit être compris entre " << NOMBRE_BAGAGE_MIN << " et " << NOMBRE_BAGAGE_MAX << endl;
+      AFFICHER_MESSAGE_FIN;
+      VIDER_BUFFER;
+      return EXIT_FAILURE;
+   }
+
+   float distanceKm;
    cout << "- distance [km] [" << DISTANCE_KM_MIN << " - " << DISTANCE_KM_MAX << "] :" ;
-   cin >> travelDistance;
-   cin.ignore(numeric_limits<streamsize>::max(), '\n');
+   cin >> distanceKm;
+   VIDER_BUFFER;
+
+   if (distanceKm < DISTANCE_KM_MIN || distanceKm > DISTANCE_KM_MAX) {
+      cout << "La distance doit être comprise entre " << DISTANCE_KM_MIN << " et " << DISTANCE_KM_MAX << endl;
+      AFFICHER_MESSAGE_FIN;
+      VIDER_BUFFER;
+      return EXIT_FAILURE;
+   }
 
    float vitesseKmH;
    cout << "- vitesse [km/h] [" << VITESSE_KMH_MIN << " - " << VITESSE_KMH_MAX << "] :" ;
    cin >> vitesseKmH;
-   cin.ignore(numeric_limits<streamsize>::max(), '\n');
+   VIDER_BUFFER;
 
-   unsigned int heureDepart,
-                minutesDepart;
+   if (vitesseKmH < VITESSE_KMH_MIN || vitesseKmH > VITESSE_KMH_MAX) {
+      cout << "La vitesse doit être comprise entre " << VITESSE_KMH_MIN << " et " << VITESSE_KMH_MAX << endl;
+      AFFICHER_MESSAGE_FIN;
+      VIDER_BUFFER;
+      return EXIT_FAILURE;
+   }
+
+   unsigned int heureDepart, minutesDepart;
    cout << "- depart [hh:mm] : ";
    cin >> heureDepart;
    cin.ignore(numeric_limits<streamsize>::max(), ':');
    cin >> minutesDepart;
-   cin.ignore(numeric_limits<streamsize>::max(), '\n');
+   VIDER_BUFFER;
 
-   int tempsTrajet = ceil((travelDistance / vitesseKmH) * 60.0);
-   unsigned int tempsDepartMinutes = minutesDepart * 60 + minutesDepart;
-
-   if (tempsDepartMinutes >= MINUTES_DEBUT_TARIF_JOUR && tempsDepartMinutes < MINUTES_FIN_TARIF_JOUR) {
-      // tarif jour
-   } else {
-      // tarif nuit
+   // TODO: Vérifier si >= 0 ou pas ?
+   if (heureDepart > 23 || minutesDepart > 59) {
+      cout << "L'heure de départ doit être comprise entre [0-23]:[0:59]" << endl;
+      AFFICHER_MESSAGE_FIN;
+      VIDER_BUFFER;
+      return EXIT_FAILURE;
    }
 
-   float luggagePrice = PER_LUGGAGE_TAX * (float) luggageCount;
-   float travelPrice = 3 * (float) tempsTrajet;
-   float totalPrice = BASE_PRICE + luggagePrice + travelPrice;
+   int tempsTrajet = ceil((distanceKm / vitesseKmH) * 60.0);
+   unsigned int heureDepartMinutes = heureDepart * 60 + minutesDepart;
+   unsigned int tempsTrajetJourMinutes,
+                tempsTrajetNuitMinutes;
+
+   // Détermine dans quel tarif la course a débutée
+   if (heureDepartMinutes >= MINUTES_DEBUT_TARIF_JOUR && heureDepartMinutes < MINUTES_FIN_TARIF_JOUR) {
+      // tarif jour
+      tempsTrajetJourMinutes = MINUTES_FIN_TARIF_JOUR - heureDepartMinutes;
+
+      // tarif nuit
+      tempsTrajetNuitMinutes = heureDepartMinutes + tempsTrajetJourMinutes > MINUTES_FIN_TARIF_JOUR
+         ? tempsTrajet - tempsTrajetJourMinutes
+         : 0;
+   } else {
+      // tarif nuit
+      tempsTrajetNuitMinutes = MINUTES_DEBUT_TARIF_JOUR - heureDepartMinutes;
+
+      // tarif jour
+      tempsTrajetJourMinutes = (heureDepartMinutes + tempsTrajetNuitMinutes) % 1440 >= MINUTES_DEBUT_TARIF_JOUR
+         ? tempsTrajet - tempsTrajetNuitMinutes
+         : 0;
+   }
+
+   float luggagePrice = PER_LUGGAGE_TAX * (float) nombreBagages;
+   float totalTrajetJour = (float) tempsTrajetJourMinutes * TARIF_JOUR;
+   float totalTrajetNuit = (float) tempsTrajetNuitMinutes * TARIF_NUIT;
+   float totalPrice = BASE_PRICE + luggagePrice + totalTrajetJour + totalTrajetNuit;
 
    // Affiche les résultats
    cout << fixed << setprecision(2) << endl
         << "votre ticket" << endl
         << "============" << endl
-        << " - prise en charge     : " << BASE_PRICE     << endl
-        << " - supp bagages        : " << luggagePrice   << endl
-        << " - temps de la course"                       << endl
-        << "    xxx' @ " << TARIF_JOUR << " : " << "XXX" << endl
-        << "    yyy0 @ " << TARIF_NUIT << " : " << "YYY" << endl
+        << " - prise en charge     : " << BASE_PRICE << endl
+        << " - supp bagages        : " << luggagePrice << endl
+        << " - temps de la course" << endl
+        << "  " << tempsTrajetJourMinutes << "' @ " << TARIF_JOUR << " : " << totalTrajetJour << endl
+        << "  " << tempsTrajetNuitMinutes << "' @ " << TARIF_NUIT << " : " << totalTrajetNuit << endl
         << "---------------   -----------"
         << " TOTAL : " << totalPrice << endl;
 
    // Laisse l'utilisateur appuyer sur ENTREE pour fermer le programme
-   cout << "presser ENTREE pour quitter" << endl;
-   cin.ignore(numeric_limits<streamsize>::max(), '\n');
+   AFFICHER_MESSAGE_FIN;
+   VIDER_BUFFER;
 
-   // Fin de programme :tada:
    return EXIT_SUCCESS;
 }
