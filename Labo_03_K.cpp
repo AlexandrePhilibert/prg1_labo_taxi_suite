@@ -16,9 +16,20 @@
 using namespace std; // Permet d'éviter de mettre std:: partout
 
 // Initialise les constantes (définies dans les données)
-const float BASE_PRICE = 5.00f;
-const float PER_LUGGAGE_TAX = 2.60f;
-const float PER_MINUTE_PRICE = 1.20f;
+const float BASE_PRICE = 5.00f,
+            PER_LUGGAGE_TAX = 2.60f,
+            TARIF_JOUR = 1.00f,
+            TARIF_NUIT = 1.60f;
+
+const unsigned short NOMBRE_BAGAGE_MIN = 0,
+            NOMBRE_BAGAGE_MAX = 4,
+            DISTANCE_KM_MIN = 0,
+            DISTANCE_KM_MAX = 500,
+            VITESSE_KMH_MIN = 30,
+            VITESSE_KMH_MAX = 120,
+            MINUTES_DEBUT_TARIF_JOUR = 480, // 8 * 60
+            MINUTES_FIN_TARIF_JOUR = 1200;  // 20 * 60
+
 
 int main() {
    // Affiche le message de bienvenue
@@ -28,9 +39,12 @@ int main() {
    // Affiche les constantes du programme
    // (avec une limite de précision de 2, pour éviter les erreurs d'encodage des valeurs flottantes)
    cout << fixed << setprecision(2)
-        << " - prise en charge  : " << BASE_PRICE << endl
+        << " - prise en charge  : " << BASE_PRICE      << endl
         << " - supp par bagag   : " << PER_LUGGAGE_TAX << endl
-        << " - tarif/minute     : " << PER_MINUTE_PRICE << endl;
+        << " - tarif/min (jour) : " << TARIF_JOUR      << endl
+        << " - tarif/min (nuit) : " << TARIF_NUIT      << endl
+        // TODO: Mettre tarif jour en constante
+        << " - tarif jour       : " << "08h00 - 20h00" << endl;
 
 
    // Demande à l'utilisateur les entrées du programme
@@ -38,34 +52,52 @@ int main() {
         << "==============" << endl;
    // Un entier est choisi, il n'est pas possible d'avoir 2.4 bagages.
    int luggageCount;
-   cout << "- nbre de baggage     : ";
+   cout << "- nbre de baggage [" << NOMBRE_BAGAGE_MIN << " - " << NOMBRE_BAGAGE_MAX << "] :" ;
    cin >> luggageCount;
    cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
    // Nous n'avons pas forcément besoin de plus de 6 chiffres significatifs dans les entrées
    float travelDistance;
-   cout << "- distance [km]       : ";
+   cout << "- distance [km] [" << DISTANCE_KM_MIN << " - " << DISTANCE_KM_MAX << "] :" ;
    cin >> travelDistance;
    cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
-   float travelSpeed;
-   cout << "- vitesse [km/h]      : ";
-   cin >> travelSpeed;
+   float vitesseKmH;
+   cout << "- vitesse [km/h] [" << VITESSE_KMH_MIN << " - " << VITESSE_KMH_MAX << "] :" ;
+   cin >> vitesseKmH;
    cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
-   // Calcule le temps de trajet
-   int travelTime = ceil((travelDistance / travelSpeed) * 60.0);
-   float luggagePrice = PER_LUGGAGE_TAX * luggageCount;
-   float travelPrice = PER_MINUTE_PRICE * travelTime;
+   unsigned int heureDepart,
+                minutesDepart;
+   cout << "- depart [hh:mm] : ";
+   cin >> heureDepart;
+   cin.ignore(numeric_limits<streamsize>::max(), ':');
+   cin >> minutesDepart;
+   cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+   int tempsTrajet = ceil((travelDistance / vitesseKmH) * 60.0);
+   unsigned int tempsDepartMinutes = minutesDepart * 60 + minutesDepart;
+
+   if (tempsDepartMinutes >= MINUTES_DEBUT_TARIF_JOUR && tempsDepartMinutes < MINUTES_FIN_TARIF_JOUR) {
+      // tarif jour
+   } else {
+      // tarif nuit
+   }
+
+   float luggagePrice = PER_LUGGAGE_TAX * (float) luggageCount;
+   float travelPrice = 3 * (float) tempsTrajet;
    float totalPrice = BASE_PRICE + luggagePrice + travelPrice;
 
    // Affiche les résultats
    cout << fixed << setprecision(2) << endl
         << "votre ticket" << endl
-        << "=====================" << endl
-        << " - prise en charge   : " << BASE_PRICE << endl
-        << " - supp bagages      : " << luggagePrice << endl
-        << " - prix de la course : " << travelPrice << endl
+        << "============" << endl
+        << " - prise en charge     : " << BASE_PRICE     << endl
+        << " - supp bagages        : " << luggagePrice   << endl
+        << " - temps de la course"                       << endl
+        << "    xxx' @ " << TARIF_JOUR << " : " << "XXX" << endl
+        << "    yyy0 @ " << TARIF_NUIT << " : " << "YYY" << endl
+        << "---------------   -----------"
         << " TOTAL : " << totalPrice << endl;
 
    // Laisse l'utilisateur appuyer sur ENTREE pour fermer le programme
