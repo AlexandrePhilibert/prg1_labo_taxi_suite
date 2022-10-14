@@ -23,26 +23,25 @@ using namespace std; // Permet d'éviter de mettre std:: partout
 #define AFFICHER_MESSAGE_FIN cout << "presser ENTREE pour quitter" << endl
 #define VIDER_BUFFER cin.ignore(numeric_limits<streamsize>::max(), '\n')
 
-// Initialise les constantes (définies dans les données)
-const float BASE_PRICE = 5.00f,
-            PER_LUGGAGE_TAX = 2.60f,
-            TARIF_JOUR = 1.00f,
-            TARIF_NUIT = 1.60f;
-
-const unsigned short NOMBRE_BAGAGE_MIN = 0,
-            NOMBRE_BAGAGE_MAX = 4,
-            DISTANCE_KM_MIN = 0,
-            DISTANCE_KM_MAX = 500,
-            VITESSE_KMH_MIN = 30,
-            VITESSE_KMH_MAX = 120,
-            MINUTES_DEBUT_TARIF_JOUR = 480, // 8 * 60
-            MINUTES_FIN_TARIF_JOUR = 1200;  // 20 * 60
-
-
 int main() {
+   // Initialise les constantes (définies dans les données)
+   const float BASE_PRICE = 5.00f,
+               PER_LUGGAGE_TAX = 2.60f,
+               TARIF_JOUR = 1.00f,
+               TARIF_NUIT = 1.60f;
+
+   const unsigned short NOMBRE_BAGAGE_MIN = 0,
+                        NOMBRE_BAGAGE_MAX = 4,
+                        DISTANCE_KM_MIN = 0,
+                        DISTANCE_KM_MAX = 500,
+                        VITESSE_KMH_MIN = 30,
+                        VITESSE_KMH_MAX = 120,
+                        MINUTES_DEBUT_TARIF_JOUR = 480, // 8 * 60
+                        MINUTES_FIN_TARIF_JOUR = 1200;  // 20 * 60
+
    // Affiche le message de bienvenue
-   cout << "bonjour, ce programme..." << endl
-        << "voici les conditions" << endl
+   cout << "bonjour, ce programme..."  << endl
+        << "voici les conditions"      << endl
         << "=========================" << endl;
    // Affiche les constantes du programme
    // (avec une limite de précision de 2, pour éviter les erreurs d'encodage des valeurs flottantes)
@@ -110,7 +109,7 @@ int main() {
       return EXIT_FAILURE;
    }
 
-   int tempsTrajet = ceil((distanceKm / vitesseKmH) * 60.0);
+   int tempsTrajetMinutes = ceil((distanceKm / vitesseKmH) * 60.0);
    unsigned int heureDepartMinutes = heureDepart * 60 + minutesDepart;
    unsigned int tempsTrajetJourMinutes,
                 tempsTrajetNuitMinutes;
@@ -122,7 +121,7 @@ int main() {
 
       // tarif nuit
       tempsTrajetNuitMinutes = heureDepartMinutes + tempsTrajetJourMinutes > MINUTES_FIN_TARIF_JOUR
-         ? tempsTrajet - tempsTrajetJourMinutes
+         ? tempsTrajetMinutes - tempsTrajetJourMinutes
          : 0;
    } else {
       // tarif nuit
@@ -130,7 +129,7 @@ int main() {
 
       // tarif jour
       tempsTrajetJourMinutes = (heureDepartMinutes + tempsTrajetNuitMinutes) % 1440 >= MINUTES_DEBUT_TARIF_JOUR
-         ? tempsTrajet - tempsTrajetNuitMinutes
+         ? tempsTrajetMinutes - tempsTrajetNuitMinutes
          : 0;
    }
 
